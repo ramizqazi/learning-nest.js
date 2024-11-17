@@ -24,8 +24,13 @@ export class AuthService {
       });
 
       delete user.hash;
+      const token = await this.signToken(user.id, user.email);
 
-      return this.signToken(user.id, user.email);
+      return {
+        statusCode: 200,
+        data: { user: user, token },
+        message: 'Loggedin success',
+      };
     } catch (err) {
       // IF PRISMA ERROR
       if (
@@ -50,17 +55,19 @@ export class AuthService {
       if (!passMatch) throw new ForbiddenException('CREDENTIALS INVALID');
 
       delete user.hash;
+      const token = await this.signToken(user.id, user.email);
 
-      return this.signToken(user.id, user.email);
+      return {
+        statusCode: 200,
+        data: { user: user, token },
+        message: 'Loggedin success',
+      };
     } catch (err) {
       throw err;
     }
   }
 
-  async signToken(
-    userId: number,
-    email: string,
-  ): Promise<{ access_token: string }> {
+  async signToken(userId: number, email: string): Promise<string> {
     const payload = { sub: userId, email };
 
     const access_token = await this.jwt.signAsync(payload, {
@@ -68,6 +75,6 @@ export class AuthService {
       secret: this.config.get('JWT_SECRET'),
     });
 
-    return { access_token };
+    return access_token;
   }
 }
